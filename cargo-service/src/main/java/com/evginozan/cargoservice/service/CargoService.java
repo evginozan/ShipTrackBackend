@@ -27,9 +27,7 @@ public class CargoService {
     private final BranchRepository branchRepository;
     private final CargoHistoryRepository cargoHistoryRepository;
 
-    /**
-     * Yeni kargo oluşturur
-     */
+
     @Transactional
     public CargoResponseDto createCargo(CargoCreateDto cargoDto) {
         Branch senderBranch = branchRepository.findById(cargoDto.getSenderBranchId())
@@ -56,10 +54,8 @@ public class CargoService {
                 .destinationBranch(destinationBranch)
                 .build();
 
-        // Kargo kaydet
         Cargo savedCargo = cargoRepository.save(cargo);
 
-        // Kargo geçmişi oluştur
         CargoHistory history = CargoHistory.builder()
                 .cargo(savedCargo)
                 .description("Kargo kabul edildi")
@@ -72,9 +68,7 @@ public class CargoService {
         return convertToCargoResponseDto(savedCargo);
     }
 
-    /**
-     * Kargo durumunu günceller
-     */
+
     @Transactional
     public CargoResponseDto updateCargoStatus(String trackingCode, StatusUpdateDto statusUpdateDto) {
         Cargo cargo = cargoRepository.findByTrackingCode(trackingCode)
@@ -82,30 +76,25 @@ public class CargoService {
 
         CargoStatus newStatus = statusUpdateDto.getStatus();
 
-        // Durum güncellemesi yapmadan önce iş kurallarını kontrol et
         validateStatusUpdate(cargo.getStatus(), newStatus);
 
-        // Şube değişimi varsa
         if (statusUpdateDto.getBranchId() != null) {
             Branch branch = branchRepository.findById(statusUpdateDto.getBranchId())
                     .orElseThrow(() -> new ResourceNotFoundException("Şube bulunamadı"));
             cargo.setCurrentBranch(branch);
         }
 
-        // Eğer durum "dağıtımda" ise teslimat kodu oluştur
         if (newStatus == CargoStatus.OUT_FOR_DELIVERY &&
                 cargo.getDeliveryCode() == null) {
             cargo.generateDeliveryCode();
         }
 
-        // Eğer durum "teslim edildi" ise teslimat tarihini kaydet
         if (newStatus == CargoStatus.DELIVERED) {
             cargo.setDeliveredAt(LocalDateTime.now());
         }
 
         cargo.setStatus(newStatus);
 
-        // Kargo geçmişi oluştur
         CargoHistory history = CargoHistory.builder()
                 .cargo(cargo)
                 .description(statusUpdateDto.getDescription())
@@ -118,16 +107,12 @@ public class CargoService {
         return convertToCargoResponseDto(cargoRepository.save(cargo));
     }
 
-    /**
-     * Kargo durum güncellemesi için validasyon kuralları
-     */
+
     private void validateStatusUpdate(CargoStatus currentStatus, CargoStatus newStatus) {
-        // Teslim edilmiş kargonun durumu değiştirilemez
         if (currentStatus == CargoStatus.DELIVERED) {
             throw new IllegalStateException("Teslim edilmiş kargonun durumu değiştirilemez");
         }
 
-        // Durum geçişlerini kontrol et
         switch (currentStatus) {
             case AT_SENDER_BRANCH:
                 if (newStatus != CargoStatus.IN_TRANSIT) {
@@ -159,9 +144,7 @@ public class CargoService {
         }
     }
 
-    /**
-     * Takip kodu ile kargo bilgilerini getirir
-     */
+
     public CargoResponseDto getCargoByTrackingCode(String trackingCode) {
         Cargo cargo = cargoRepository.findByTrackingCode(trackingCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Kargo bulunamadı"));
@@ -169,9 +152,7 @@ public class CargoService {
         return convertToCargoResponseDto(cargo);
     }
 
-    /**
-     * Teslimat kodunu kontrol eder ve doğruysa kargonun teslim edilmesini sağlar
-     */
+
     @Transactional
     public CargoResponseDto verifyDeliveryCode(String trackingCode, String deliveryCode) {
         Cargo cargo = cargoRepository.findByTrackingCode(trackingCode)
@@ -188,7 +169,6 @@ public class CargoService {
         cargo.setStatus(CargoStatus.DELIVERED);
         cargo.setDeliveredAt(LocalDateTime.now());
 
-        // Kargo geçmişi oluştur
         CargoHistory history = CargoHistory.builder()
                 .cargo(cargo)
                 .description("Kargo teslim edildi")
@@ -201,9 +181,7 @@ public class CargoService {
         return convertToCargoResponseDto(cargoRepository.save(cargo));
     }
 
-    /**
-     * Kullanıcının gönderdiği kargoları listeler
-     */
+
     public List<CargoResponseDto> getCargosBySenderPhone(String senderPhone) {
         List<Cargo> cargos = cargoRepository.findBySenderPhoneOrderByCreatedAtDesc(senderPhone);
 
@@ -212,9 +190,7 @@ public class CargoService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Kullanıcının alacağı kargoları listeler
-     */
+
     public List<CargoResponseDto> getCargosByReceiverPhone(String receiverPhone) {
         List<Cargo> cargos = cargoRepository.findByReceiverPhoneOrderByCreatedAtDesc(receiverPhone);
 
@@ -223,9 +199,7 @@ public class CargoService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Kargo nesnesini DTO'ya dönüştürür
-     */
+
     private CargoResponseDto convertToCargoResponseDto(Cargo cargo) {
         List<CargoHistory> history = cargoHistoryRepository
                 .findByCargoTrackingCodeOrderByTimestampDesc(cargo.getTrackingCode());
@@ -255,9 +229,7 @@ public class CargoService {
                 .build();
     }
 
-    /**
-     * Teslimat kodunu getirir
-     */
+
     public String getDeliveryCode(String trackingCode) {
         Cargo cargo = cargoRepository.findByTrackingCode(trackingCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Kargo bulunamadı"));

@@ -26,10 +26,7 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Rolleri oluştur
         createRoles();
-
-        // Admin kullanıcısı oluştur
         createAdminUser();
     }
 

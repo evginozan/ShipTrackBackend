@@ -16,9 +16,7 @@ public class BranchService {
 
     private final BranchRepository branchRepository;
 
-    /**
-     * Tüm şubeleri listeler
-     */
+
     public List<BranchDto> getAllBranches() {
         List<Branch> branches = branchRepository.findAll();
 
@@ -27,9 +25,7 @@ public class BranchService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * ID ile şube getirir
-     */
+
     public BranchDto getBranchById(Long id) {
         Branch branch = branchRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Şube bulunamadı"));
@@ -37,9 +33,7 @@ public class BranchService {
         return convertToBranchDto(branch);
     }
 
-    /**
-     * Şehirdeki şubeleri listeler
-     */
+
     public List<BranchDto> getBranchesByCity(String city) {
         List<Branch> branches = branchRepository.findByCity(city);
 
@@ -48,9 +42,7 @@ public class BranchService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Şehir ve ilçedeki şubeleri listeler
-     */
+
     public List<BranchDto> getBranchesByCityAndDistrict(String city, String district) {
         List<Branch> branches = branchRepository.findByCityAndDistrict(city, district);
 
@@ -59,9 +51,7 @@ public class BranchService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Transfer merkezlerini listeler
-     */
+
     public List<BranchDto> getTransferCenters() {
         List<Branch> branches = branchRepository.findByIsTransferCenter(true);
 
@@ -70,9 +60,7 @@ public class BranchService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Branch nesnesini DTO'ya dönüştürür
-     */
+
     private BranchDto convertToBranchDto(Branch branch) {
         return BranchDto.builder()
                 .id(branch.getId())

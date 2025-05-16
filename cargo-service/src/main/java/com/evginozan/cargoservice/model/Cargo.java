@@ -48,21 +48,17 @@ public class Cargo {
     @Column(nullable = false)
     private String destinationAddress;
 
-    // Kargo fiziksel özellikleri
     private BigDecimal weight; // kg
     private Integer width;     // cm
     private Integer height;    // cm
     private Integer length;    // cm
 
-    // Kargo durumu
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CargoStatus status;
 
-    // Teslimat kodu
     private String deliveryCode;
 
-    // Şube bilgileri
     @ManyToOne
     @JoinColumn(name = "sender_branch_id", nullable = false)
     private Branch senderBranch;
@@ -75,21 +71,16 @@ public class Cargo {
     @JoinColumn(name = "destination_branch_id", nullable = false)
     private Branch destinationBranch;
 
-    // Oluşturma zamanı
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    // Son güncelleme zamanı
     private LocalDateTime updatedAt;
 
-    // Teslimat zamanı
     private LocalDateTime deliveredAt;
 
-    // Kargo geçmişi
     @OneToMany(mappedBy = "cargo", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CargoHistory> history = new ArrayList<>();
 
-    // Kargo oluşturma öncesi çalışacak metot
     @PrePersist
     public void prePersist() {
         this.trackingCode = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
@@ -98,13 +89,11 @@ public class Cargo {
         this.status = CargoStatus.AT_SENDER_BRANCH;
     }
 
-    // Kargo güncelleme öncesi çalışacak metot
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // Teslimat kodunu oluşturan metot
     public void generateDeliveryCode() {
         this.deliveryCode = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
     }
